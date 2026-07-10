@@ -24,6 +24,7 @@ export interface CerfaTemplate {
   fields: CerfaField[];
   previewUrl?: string;
   isCertified?: boolean;
+  pdfUrl?: string;
 }
 
 export interface Message {

@@ -280,6 +280,14 @@ function Home() {
               onResetAllFields={handleResetAllFields}
               activeFieldId={activeFieldId}
               onFieldSelect={handleFieldSelect}
+              onError={(msg) => {
+                setMessages(prev => [...prev, {
+                  id: `error-${Date.now()}`,
+                  sender: 'system',
+                  text: `🚨 **Erreur de téléchargement**\n\n${msg}`,
+                  timestamp: new Date()
+                }]);
+              }}
             />
           </section>
 

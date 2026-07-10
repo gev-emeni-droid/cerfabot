@@ -28,6 +28,7 @@
     "description": "Demande d'aide juridictionnelle pour la prise en charge des frais de justice.",
     "category": "Justice",
     "isCertified": true,
+    "pdfUrl": "/pdfs/cerfa_16146-03.pdf",
     "fields": []
   },
   {

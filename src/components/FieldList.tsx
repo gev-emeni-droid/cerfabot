@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CerfaField, CerfaTemplate } from '../types';
-import { User, MapPin, Car, HelpCircle, Download, RotateCcw, Check, Sparkles } from 'lucide-react';
-import { exportCerfaToTxt } from '../services/cerfaService';
+import { User, MapPin, Car, HelpCircle, Download, RotateCcw, Check, Sparkles, Loader2 } from 'lucide-react';
+import { fillAndDownloadPdf } from '../services/cerfaService';
 
 interface FieldListProps {
   template: CerfaTemplate | null;
@@ -11,6 +11,7 @@ interface FieldListProps {
   onResetAllFields: () => void;
   activeFieldId: string | null;
   onFieldSelect: (fieldId: string) => void;
+  onError: (msg: string) => void;
 }
 
 export default function FieldList({
@@ -21,7 +22,10 @@ export default function FieldList({
   onResetAllFields,
   activeFieldId,
   onFieldSelect,
+  onError
 }: FieldListProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
   if (!template) {
     return (
       <div className="flex flex-col h-full bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm p-8 items-center justify-center text-center">
@@ -67,17 +71,15 @@ export default function FieldList({
     }
   };
 
-  const handleDownload = () => {
-    const txtContent = exportCerfaToTxt(template, fields);
-    const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `cerfabot_${template.id}_rempli.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      await fillAndDownloadPdf(template, fields);
+    } catch (error: any) {
+      onError(error.message);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const filledCount = fields.filter(f => f.value !== '').length;
@@ -192,15 +194,24 @@ export default function FieldList({
       <div className="p-4 border-t border-slate-100 bg-slate-50/30">
         <button
           onClick={handleDownload}
-          disabled={filledCount === 0}
+          disabled={filledCount === 0 || isDownloading}
           className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white font-medium py-3 text-sm transition shadow-sm hover:shadow-md cursor-pointer"
           id="export-btn"
         >
-          <Download className="h-4 w-4" />
-          Télécharger l'export PDF-Lib
+          {isDownloading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Génération du PDF...
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />
+              Télécharger le PDF rempli
+            </>
+          )}
         </button>
         <p className="text-[10px] text-slate-400 text-center mt-2 leading-tight">
-          Génère le script d'injection <code>pdf-lib</code> avec vos données à intégrer dans votre Cloudflare Worker.
+          Génère le document officiel (AcroForm) final avec pdf-lib.
         </p>
       </div>
     </div>

@@ -537,3 +537,50 @@ export async function inspectPdfFields(pdfBytes: Uint8Array | ArrayBuffer) {
 
   return extractedFields;
 }
+
+/**
+ * Remplit le fichier PDF original avec les données extraites et déclenche le téléchargement.
+ */
+export async function fillAndDownloadPdf(template: CerfaTemplate, fields: CerfaField[]): Promise<void> {
+  if (!template.pdfUrl) {
+    throw new Error("Fichier modèle PDF introuvable sur le serveur. Veuillez contacter l'administrateur.");
+  }
+
+  try {
+    const response = await fetch(template.pdfUrl);
+    if (!response.ok) {
+      throw new Error(`Le fichier PDF n'a pas pu être chargé (statut: ${response.status}).`);
+    }
+
+    const pdfBytes = await response.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const form = pdfDoc.getForm();
+
+    fields.forEach(f => {
+      if (f.value) {
+        try {
+          const field = form.getTextField(f.id);
+          if (field) {
+            field.setText(f.value);
+          }
+        } catch (e) {
+          // Si le champ n'est pas un TextField ou n'existe pas
+          console.warn("Impossible de remplir le champ texte: " + f.id);
+        }
+      }
+    });
+
+    const pdfBytesFilled = await pdfDoc.save();
+    const blob = new Blob([pdfBytesFilled], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `cerfa_${template.cerfaNumber}_rempli.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error: any) {
+    throw new Error(error.message || "Erreur lors de la génération du PDF.");
+  }
+}
