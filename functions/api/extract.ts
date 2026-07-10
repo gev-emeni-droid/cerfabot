@@ -2,7 +2,7 @@ export interface Env {
   AI: any;
 }
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
+export const onRequestPost = async (context: any) => {
   try {
     const request = context.request;
     const env = context.env;
