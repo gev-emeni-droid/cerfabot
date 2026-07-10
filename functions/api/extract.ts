@@ -1,17 +1,15 @@
-export interface Env {
-  AI: any;
-}
-
-export const onRequestPost = async (context: any) => {
+export async function onRequestPost(context) {
   try {
     const request = context.request;
     const env = context.env;
     
     if (!env.AI) {
-      throw new Error("Liaison AI manquante. Veuillez vérifier wrangler.toml.");
+      return new Response(JSON.stringify({ error: "Liaison AI manquante. Configurez 'AI' dans le dashboard Cloudflare." }), { status: 500 });
     }
 
-    const { userText, fieldsStructure } = await request.json() as any;
+    const body = await request.json();
+    const userText = body.userText;
+    const fieldsStructure = body.fieldsStructure;
 
     if (!userText || !fieldsStructure) {
       return new Response(JSON.stringify({ error: "userText et fieldsStructure requis" }), { status: 400 });
@@ -34,13 +32,13 @@ Ne rajoutez aucun texte explicatif en dehors de l'objet JSON.`;
       { role: "user", content: userText }
     ];
 
-    const response = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+    // Using a reliable model
+    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
       messages,
       max_tokens: 1024,
       temperature: 0.2
     });
 
-    // Nettoyer la réponse au cas où le LLM a inclus du texte markdown (```json ... ```)
     let jsonString = response.response;
     const match = jsonString.match(/\{[\s\S]*\}/);
     if (match) {
@@ -53,7 +51,10 @@ Ne rajoutez aucun texte explicatif en dehors de l'objet JSON.`;
       headers: { 'Content-Type': 'application/json' }
     });
 
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message || String(error) }), { 
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
   }
-};
+}
