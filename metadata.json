@@ -1,0 +1,6 @@
+{
+  "name": "CerfaBot",
+  "description": "Automatisation intelligente du remplissage de formulaires administratifs Cerfa par reconnaissance vocale et analyse IA.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
