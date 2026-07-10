@@ -56,7 +56,11 @@ Ne rajoutez aucun texte explicatif en dehors de l'objet JSON.`;
 
     const extractedData = JSON.parse(jsonString);
 
-    return new Response(JSON.stringify({ success: true, data: extractedData }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      data: extractedData,
+      raw_debug: response
+    }), {
       headers: { 'Content-Type': 'application/json' }
     });
 
