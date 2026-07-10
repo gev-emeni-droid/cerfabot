@@ -253,14 +253,21 @@ export default function VoiceChat({
         )}
 
         <form onSubmit={handleSend} className="flex gap-2 relative">
-          <input
-            type="text"
+          <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Tapez vos informations ou cliquez sur le micro..."
-            className="flex-1 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 focus:border-slate-700 text-xs py-3.5 pl-4 pr-12 focus:outline-hidden text-white placeholder-slate-500 disabled:opacity-50"
+            placeholder="Collez vos longs textes, tapez vos informations ou cliquez sur le micro..."
+            className="flex-1 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 focus:border-slate-700 text-xs py-3.5 pl-4 pr-12 focus:outline-hidden text-white placeholder-slate-500 disabled:opacity-50 resize-none overflow-y-auto"
+            style={{ minHeight: '52px', maxHeight: '150px' }}
+            rows={1}
             disabled={disabled || extractionStatus.step !== 'idle'}
             id="chat-input"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (inputText.trim()) handleSend(e);
+              }
+            }}
           />
 
           {/* Micro Toggle button inside the input container for visual cleanliness */}
