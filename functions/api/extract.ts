@@ -39,7 +39,16 @@ Ne rajoutez aucun texte explicatif en dehors de l'objet JSON.`;
       temperature: 0.2
     });
 
-    let jsonString = response.response;
+    // Nettoyer la réponse au cas où le LLM a inclus du texte markdown (```json ... ```)
+    let jsonString = "";
+    if (typeof response === 'string') {
+      jsonString = response;
+    } else if (response && typeof response.response === 'string') {
+      jsonString = response.response;
+    } else {
+      jsonString = JSON.stringify(response);
+    }
+
     const match = jsonString.match(/\{[\s\S]*\}/);
     if (match) {
       jsonString = match[0];
