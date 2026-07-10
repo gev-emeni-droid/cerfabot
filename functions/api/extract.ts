@@ -33,7 +33,7 @@ Ne rajoutez aucun texte explicatif en dehors de l'objet JSON.`;
     ];
 
     // Using a reliable model
-    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
       messages,
       max_tokens: 1024,
       temperature: 0.2
