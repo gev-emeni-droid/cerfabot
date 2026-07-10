@@ -34,7 +34,7 @@ Ne rajoutez aucun texte explicatif en dehors de l'objet JSON.`;
       { role: "user", content: userText }
     ];
 
-    const response = await env.AI.run('@cf/meta/llama-3-8b-instruct', {
+    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
       messages,
       max_tokens: 1024,
       temperature: 0.2
