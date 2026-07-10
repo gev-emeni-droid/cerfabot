@@ -107,7 +107,17 @@ export async function simulateAIExtraction(
     });
 
     if (!response.ok) {
-      throw new Error("Erreur API: " + response.statusText);
+      let errMsg = response.statusText;
+      try {
+        const errBody = await response.json();
+        if (errBody.error) errMsg = errBody.error;
+      } catch (e) {
+        try {
+          const errText = await response.text();
+          if (errText) errMsg = errText;
+        } catch (e2) {}
+      }
+      throw new Error("Erreur API: " + errMsg);
     }
 
     const result = await response.json();
