@@ -86,370 +86,63 @@ export async function simulateAIExtraction(
   onProgress: (step: 'reading' | 'analyzing' | 'matching' | 'filling' | 'completed', progress: number, message: string) => void
 ): Promise<CerfaField[]> {
   
-  // Phase 1 : Lecture et prétraitement
-  onProgress('reading', 15, "Lecture et tokenisation du texte...");
-  await delay(700);
+  onProgress('reading', 15, "Lecture et transmission du texte à l'IA Cloudflare...");
+  
+  const fieldsStructure = currentFields.map(f => ({
+    id: f.id,
+    label: f.label,
+    type: f.type,
+    category: f.category
+  }));
 
-  // Phase 2 : Analyse sémantique
-  onProgress('analyzing', 45, "Analyse sémantique par l'IA (LLM)...");
-  await delay(1000);
+  try {
+    onProgress('analyzing', 45, "Analyse sémantique par Llama-3 (Workers AI)...");
+    
+    const response = await fetch('/api/extract', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userText, fieldsStructure })
+    });
 
-  // Phase 3 : Appariement des champs
-  onProgress('matching', 70, "Appariement avec les clés du formulaire Cerfa...");
-  await delay(800);
-
-  // Phase 4 : Remplissage des champs
-  onProgress('filling', 90, "Insertion des données structurées...");
-  await delay(500);
-
-  // Logique d'extraction sémantique simulée (mots-clés intelligents)
-  const textLower = userText.toLowerCase();
-  const updatedFields = currentFields.map(field => {
-    let extractedValue = field.value;
-    let found = false;
-
-    // Aide à l'analyse sémantique selon l'ID du champ
-    switch (field.id) {
-      // Identité
-      case 'vendeur_nom':
-      case 'demandeur_nom':
-        const nomMatch = userText.match(/(?:je m'appelle|mon nom est|nommé|nom :?)\s+([A-ZÀ-ÿa-z\-]+)\s+([A-ZÀ-ÿa-z\-]+)/i) ||
-                         userText.match(/(?:vendeur|demandeur)\s+([A-ZÀ-ÿa-z\-]+)/i);
-        if (nomMatch) {
-          extractedValue = nomMatch[1].toUpperCase();
-          found = true;
-        } else if (textLower.includes("dupont")) {
-          extractedValue = "DUPONT";
-          found = true;
-        } else if (textLower.includes("martin")) {
-          extractedValue = "MARTIN";
-          found = true;
-        }
-        break;
-
-      case 'vendeur_prenom':
-      case 'demandeur_prenoms':
-      case 'asso_representant_prenom':
-        const prenomMatch = userText.match(/(?:je m'appelle|mon prénom est|prénom :?)\s+([A-ZÀ-ÿa-z\-]+)/i);
-        if (prenomMatch) {
-          extractedValue = capitalizeFirstLetter(prenomMatch[1]);
-          found = true;
-        } else if (textLower.includes("jean")) {
-          extractedValue = "Jean";
-          found = true;
-        } else if (textLower.includes("sophie")) {
-          extractedValue = "Sophie";
-          found = true;
-        } else if (textLower.includes("pierre")) {
-          extractedValue = "Pierre";
-          found = true;
-        }
-        break;
-
-      case 'acquereur_nom':
-        const acqNomMatch = userText.match(/(?:acheté par|vendu à|acquéreur :?)\s+([A-ZÀ-ÿa-z\-]+)/i);
-        if (acqNomMatch) {
-          extractedValue = acqNomMatch[1].toUpperCase();
-          found = true;
-        } else if (textLower.includes("durand")) {
-          extractedValue = "DURAND";
-          found = true;
-        } else if (textLower.includes("leclerc")) {
-          extractedValue = "LECLERC";
-          found = true;
-        }
-        break;
-
-      case 'acquereur_prenom':
-        const acqPrenomMatch = userText.match(/(?:l'acquéreur s'appelle|acheteur)\s+[A-Za-z\-]+\s+([A-Za-z\-]+)/i);
-        if (acqPrenomMatch) {
-          extractedValue = capitalizeFirstLetter(acqPrenomMatch[1]);
-          found = true;
-        } else if (textLower.includes("marie")) {
-          extractedValue = "Marie";
-          found = true;
-        } else if (textLower.includes("durand")) {
-          extractedValue = "Thomas";
-          found = true;
-        }
-        break;
-
-      // Véhicule
-      case 'vehicule_immat':
-        const immatMatch = userText.match(/[a-z]{2}-?\d{3}-?[a-z]{2}/i) || 
-                           userText.match(/(?:immatriculé|immatriculation)\s+([A-Z0-9\-]+)/i);
-        if (immatMatch) {
-          extractedValue = immatMatch[0].toUpperCase().replace(/\s+/g, '');
-          found = true;
-        } else if (textLower.includes("ab-123-cd")) {
-          extractedValue = "AB-123-CD";
-          found = true;
-        } else if (textLower.includes("cession d'un véhicule") || textLower.includes("voiture")) {
-          extractedValue = "AA-456-ZZ";
-          found = true;
-        }
-        break;
-
-      case 'vehicule_vin':
-        const vinMatch = userText.match(/[a-z0-9]{17}/i) || 
-                         userText.match(/(?:vin|châssis|série)\s+([A-Z0-9]+)/i);
-        if (vinMatch) {
-          extractedValue = vinMatch[0].toUpperCase();
-          found = true;
-        } else if (textLower.includes("vin")) {
-          extractedValue = "VF38C9HZC12345678";
-          found = true;
-        }
-        break;
-
-      case 'vehicule_marque':
-        const marques = ["peugeot", "renault", "citroen", "audi", "bmw", "tesla", "toyota", "mercedes", "fiat", "volkswagen"];
-        for (const m of marques) {
-          if (textLower.includes(m)) {
-            extractedValue = capitalizeFirstLetter(m);
-            found = true;
-            break;
-          }
-        }
-        break;
-
-      case 'vehicule_modele':
-        const modeles = ["clio", "208", "twingo", "zoe", "golf", "model 3", "yaris", "sandero", "scenic"];
-        for (const mod of modeles) {
-          if (textLower.includes(mod)) {
-            extractedValue = mod.toUpperCase();
-            found = true;
-            break;
-          }
-        }
-        break;
-
-      case 'vehicule_puissance':
-        const puissanceMatch = userText.match(/(\d+)\s*(?:cv|puissance|chevaux|ch)/i);
-        if (puissanceMatch) {
-          extractedValue = puissanceMatch[1];
-          found = true;
-        } else if (textLower.includes("puissance") || textLower.includes("fiscale")) {
-          extractedValue = "5";
-          found = true;
-        }
-        break;
-
-      // Adresses
-      case 'vendeur_adresse':
-        const adrVendeurMatch = userText.match(/(?:habitant au|résidant au|demeurant au|adresse :?)\s+([^,.\n]+)/i);
-        if (adrVendeurMatch) {
-          extractedValue = adrVendeurMatch[1];
-          found = true;
-        } else if (textLower.includes("adresse") && textLower.includes("paris")) {
-          extractedValue = "45 Rue de Rivoli, 75001 Paris";
-          found = true;
-        }
-        break;
-
-      case 'acquereur_adresse':
-        const adrAcqMatch = userText.match(/(?:l'acquéreur habite au|demeure au)\s+([^,.\n]+)/i);
-        if (adrAcqMatch) {
-          extractedValue = adrAcqMatch[1];
-          found = true;
-        } else if (textLower.includes("durand") && textLower.includes("lyon")) {
-          extractedValue = "12 Avenue Jean Jaurès, 69007 Lyon";
-          found = true;
-        }
-        break;
-
-      case 'demandeur_adresse':
-      case 'asso_adresse_siege':
-        const adrGenMatch = userText.match(/(?:adresse|siège|habite au)\s+(?:est|au)?\s+([^,.\n]+)/i);
-        if (adrGenMatch) {
-          extractedValue = adrGenMatch[1];
-          found = true;
-        } else if (textLower.includes("rue")) {
-          // Extraire l'adresse grossièrement
-          const streetMatch = userText.match(/\d+[\s\w]+(?:rue|avenue|boulevard|place|chemin)[\s\w]+/i);
-          if (streetMatch) {
-            extractedValue = streetMatch[0];
-            found = true;
-          }
-        }
-        break;
-
-      // Dates
-      case 'date_cession':
-        const dateMatch = userText.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/);
-        if (dateMatch) {
-          // Formatter en YYYY-MM-DD pour le type input date
-          const parts = dateMatch[0].split(/[\/\-]/);
-          extractedValue = `${parts[2]}-${parts[1]}-${parts[0]}`;
-          found = true;
-        } else if (textLower.includes("aujourd'hui")) {
-          const today = new Date();
-          extractedValue = today.toISOString().split('T')[0];
-          found = true;
-        }
-        break;
-
-      case 'demandeur_date_naissance':
-        const bdayMatch = userText.match(/né le\s+(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i) || 
-                           userText.match(/naissance le\s+(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i);
-        if (bdayMatch) {
-          const parts = bdayMatch[1].split(/[\/\-]/);
-          extractedValue = `${parts[2]}-${parts[1]}-${parts[0]}`;
-          found = true;
-        } else if (textLower.includes("naissance") || textLower.includes("né le")) {
-          extractedValue = "1990-05-15";
-          found = true;
-        }
-        break;
-
-      // Demandes Générales
-      case 'demandeur_ville_naissance':
-        const villeMatch = userText.match(/(?:né à|naissance à)\s+([a-z\-]+)/i);
-        if (villeMatch) {
-          extractedValue = capitalizeFirstLetter(villeMatch[1]);
-          found = true;
-        } else if (textLower.includes("marseille")) {
-          extractedValue = "Marseille";
-          found = true;
-        }
-        break;
-
-      case 'demandeur_taille':
-        const tailleMatch = userText.match(/mesure\s+(\d+)\s*cm/i) || userText.match(/taille\s+d?e?\s*(\d+)/i);
-        if (tailleMatch) {
-          extractedValue = tailleMatch[1];
-          found = true;
-        } else if (textLower.includes("mesure 1m")) {
-          const mMatch = userText.match(/1m(\d{2})/);
-          if (mMatch) {
-            extractedValue = "1" + mMatch[1];
-            found = true;
-          }
-        }
-        break;
-
-      case 'demandeur_sexe':
-        if (textLower.includes("femme") || textLower.includes("féminin") || textLower.includes("madame")) {
-          extractedValue = "F";
-          found = true;
-        } else if (textLower.includes("homme") || textLower.includes("masculin") || textLower.includes("monsieur")) {
-          extractedValue = "M";
-          found = true;
-        }
-        break;
-
-      case 'demandeur_telephone':
-      case 'asso_telephone':
-        const telMatch = userText.match(/0[1-9](?:\s*\d{2}){4}/) || userText.match(/téléphone\s*(?:est)?\s*([0-9\s]+)/i);
-        if (telMatch) {
-          extractedValue = telMatch[0].trim();
-          found = true;
-        }
-        break;
-
-      case 'demandeur_email':
-      case 'asso_email':
-        const emailMatch = userText.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i);
-        if (emailMatch) {
-          extractedValue = emailMatch[0].toLowerCase();
-          found = true;
-        }
-        break;
-
-      // Association
-      case 'asso_titre':
-        const titleMatch = userText.match(/(?:nom de l'association|s'appelle|titre)\s+([^,.\n]+)/i);
-        if (titleMatch) {
-          extractedValue = titleMatch[1];
-          found = true;
-        } else if (textLower.includes("association") && textLower.includes("amis")) {
-          extractedValue = "Les Amis du Patrimoine Local";
-          found = true;
-        }
-        break;
-
-      case 'asso_sigle':
-        const sigleMatch = userText.match(/(?:sigle|abréviation)\s+([^,.\n]+)/i);
-        if (sigleMatch) {
-          extractedValue = sigleMatch[1].toUpperCase().trim();
-          found = true;
-        } else if (textLower.includes("sigle")) {
-          extractedValue = "APL";
-          found = true;
-        }
-        break;
-
-      case 'asso_objet':
-        const objetMatch = userText.match(/(?:but|objet|mission)\s+d?e?\s*l'association\s+est\s+([^,.\n]+)/i);
-        if (objetMatch) {
-          extractedValue = objetMatch[1];
-          found = true;
-        } else if (textLower.includes("promouvoir") || textLower.includes("sauvegarder")) {
-          extractedValue = "Promouvoir la culture locale et sauvegarder les monuments historiques de la commune.";
-          found = true;
-        }
-        break;
-
-      case 'asso_representant_nom':
-        const repNomMatch = userText.match(/(?:président|représentant)\s+([A-Za-z\-]+)\s+([A-Za-z\-]+)/i);
-        if (repNomMatch) {
-          extractedValue = repNomMatch[2].toUpperCase();
-          found = true;
-        }
-        break;
+    if (!response.ok) {
+      throw new Error("Erreur API: " + response.statusText);
     }
 
-    // Si aucune extraction directe mais qu'on a des phrases génériques de démo
-    if (!found) {
-      if (textLower.includes("remplir exemple") || textLower.includes("test")) {
-        // Remplir de données de test selon le champ
-        if (field.id === 'vehicule_immat') extractedValue = "AB-123-CD";
-        if (field.id === 'vehicule_vin') extractedValue = "VF38C9HZC12345678";
-        if (field.id === 'vehicule_marque') extractedValue = "Peugeot";
-        if (field.id === 'vehicule_modele') extractedValue = "208";
-        if (field.id === 'vehicule_puissance') extractedValue = "5";
-        if (field.id === 'vendeur_nom') extractedValue = "DUPONT";
-        if (field.id === 'vendeur_prenom') extractedValue = "Jean";
-        if (field.id === 'vendeur_adresse') extractedValue = "45 Rue de Rivoli, 75001 Paris";
-        if (field.id === 'acquereur_nom') extractedValue = "DURAND";
-        if (field.id === 'acquereur_prenom') extractedValue = "Thomas";
-        if (field.id === 'acquereur_adresse') extractedValue = "12 Avenue Jean Jaurès, 69007 Lyon";
-        if (field.id === 'date_cession') extractedValue = new Date().toISOString().split('T')[0];
-        
-        if (field.id === 'demandeur_nom') extractedValue = "MARTIN";
-        if (field.id === 'demandeur_prenoms') extractedValue = "Sophie";
-        if (field.id === 'demandeur_date_naissance') extractedValue = "1994-08-22";
-        if (field.id === 'demandeur_ville_naissance') extractedValue = "Marseille";
-        if (field.id === 'demandeur_taille') extractedValue = "172";
-        if (field.id === 'demandeur_sexe') extractedValue = "F";
-        if (field.id === 'demandeur_pere_nom') extractedValue = "MARTIN Jacques";
-        if (field.id === 'demandeur_mere_nom') extractedValue = "ALEXANDRE Jeanne";
-        if (field.id === 'demandeur_adresse') extractedValue = "88 Rue de la République, 13002 Marseille";
-        if (field.id === 'demandeur_telephone') extractedValue = "06 12 34 56 78";
-        if (field.id === 'demandeur_email') extractedValue = "sophie.martin@example.com";
-
-        if (field.id === 'asso_titre') extractedValue = "Club Photo Amateur";
-        if (field.id === 'asso_sigle') extractedValue = "CPA";
-        if (field.id === 'asso_objet') extractedValue = "Regrouper les passionnés de photographie argentique et numérique pour des ateliers.";
-        if (field.id === 'asso_adresse_siege') extractedValue = "14 Rue des Arts, 31000 Toulouse";
-        if (field.id === 'asso_telephone') extractedValue = "05 61 00 00 00";
-        if (field.id === 'asso_email') extractedValue = "contact@clubphotoamateur.org";
-        if (field.id === 'asso_representant_nom') extractedValue = "LEMOINE";
-        if (field.id === 'asso_representant_prenom') extractedValue = "Julien";
-        
-        found = true;
-      }
+    const result = await response.json();
+    
+    if (result.error) {
+      throw new Error(result.error);
     }
 
-    return {
-      ...field,
-      value: extractedValue,
-      isExtracted: field.isExtracted || found || (extractedValue !== '' && extractedValue !== field.value)
-    };
-  });
+    const extractedData = result.data || {};
 
-  onProgress('completed', 100, "Données insérées avec succès !");
-  return updatedFields;
+    onProgress('matching', 70, "Appariement avec les clés du formulaire Cerfa...");
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    await delay(500);
+
+    onProgress('filling', 90, "Insertion des données structurées...");
+    await delay(300);
+
+    const updatedFields = currentFields.map(field => {
+      const aiValue = extractedData[field.id];
+      const hasNewValue = aiValue !== undefined && aiValue !== null && aiValue !== '';
+      
+      return {
+        ...field,
+        value: hasNewValue ? String(aiValue) : field.value,
+        isExtracted: field.isExtracted || hasNewValue
+      };
+    });
+
+    onProgress('completed', 100, "Données insérées avec succès !");
+    return updatedFields;
+
+  } catch (error) {
+    console.error("Erreur lors de l'appel à l'IA:", error);
+    throw error;
+  }
 }
 
 // Helpers
