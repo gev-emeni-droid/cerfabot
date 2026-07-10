@@ -4,14 +4,15 @@ import Header from './components/Header';
 import PdfViewer from './components/PdfViewer';
 import FieldList from './components/FieldList';
 import VoiceChat from './components/VoiceChat';
-import { CERFA_TEMPLATES, simulateAIExtraction } from './services/cerfaService';
+import { CERFA_LIST, inspectPdfFields, simulateAIExtraction } from './services/cerfaService';
 import { CerfaTemplate, CerfaField, Message, ExtractionStatus } from './types';
 import { Sparkles, Bot, AlertCircle, FileText, CheckCircle } from 'lucide-react';
 import Legal from './components/Legal';
+import CerfaSelector from './components/CerfaSelector';
 
 function Home() {
-  // Sélection du modèle de Cerfa (par défaut le premier)
-  const [currentTemplate, setCurrentTemplate] = useState<CerfaTemplate>(CERFA_TEMPLATES[0]);
+  // Sélection du modèle de Cerfa (par défaut Vierge)
+  const [currentTemplate, setCurrentTemplate] = useState<CerfaTemplate | null>(null);
   
   // Liste des champs en cours (clonés depuis le modèle courant)
   const [fields, setFields] = useState<CerfaField[]>([]);
@@ -34,63 +35,64 @@ function Home() {
 
   // Synchroniser les champs lors du changement de modèle Cerfa
   useEffect(() => {
+    if (!currentTemplate) {
+      setFields([]);
+      setMessages([{
+        id: 'welcome-empty',
+        sender: 'bot',
+        text: `Bonjour ! Je suis l'assistant intelligent CerfaBot.\n\nVeuillez commencer par **sélectionner un modèle** dans la barre ci-dessus ou **importer un PDF local** pour démarrer l'analyse.`,
+        timestamp: new Date()
+      }]);
+      setActiveFieldId(null);
+      return;
+    }
+
     setFields(currentTemplate.fields.map(f => ({ ...f, value: '' })));
     
     // Message de bienvenue initialisé selon le modèle
     const welcomeMessage: Message = {
-      id: 'welcome',
+      id: `welcome-${Date.now()}`,
       sender: 'bot',
-      text: `Bonjour ! Je suis l'assistant intelligent CerfaBot.\n\nVous êtes actuellement sur le modèle : **${currentTemplate.name} (Cerfa ${currentTemplate.cerfaNumber})**.\n\nComment m'utiliser ?\n1. Activez le micro 🎤 en bas pour dicter vos informations, ou tapez-les au clavier.\n2. Cliquez sur **'Analyser et Remplir avec l'IA'**.\n3. Je vais mapper sémantiquement vos propos avec les cases correspondantes du document. Vous pourrez alors télécharger la structure prête à l'emploi.`,
+      text: `Vous êtes actuellement sur le modèle : **${currentTemplate.name} (Cerfa ${currentTemplate.cerfaNumber})**.\n\nComment m'utiliser ?\n1. Activez le micro 🎤 en bas pour dicter vos informations, ou tapez-les au clavier.\n2. Cliquez sur **'Analyser et Remplir avec l'IA'**.\n3. Je vais mapper sémantiquement vos propos avec les cases correspondantes du document.`,
       timestamp: new Date()
     };
     
-    setMessages([welcomeMessage]);
+    setMessages(prev => [...prev, welcomeMessage]);
     setActiveFieldId(null);
   }, [currentTemplate]);
 
   // Gérer l'upload d'un nouveau fichier PDF
-  const handleFileUploaded = (file: File | null) => {
-    if (!file) {
-      setUploadedFile(null);
-      // Réinitialiser les champs du modèle courant
-      setFields(currentTemplate.fields.map(f => ({ ...f, value: '', isExtracted: false })));
-      
-      const resetMsg: Message = {
-        id: `file-remove-${Date.now()}`,
-        sender: 'system',
-        text: `🗑️ Le fichier PDF importé a été retiré. Retour au mode simulation.`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, resetMsg]);
-      return;
+  const handleFileUploaded = async (e: React.ChangeEvent<HTMLInputElement> | File) => {
+    let file: File | null = null;
+    if (e instanceof File) {
+      file = e;
+    } else if (e.target && e.target.files && e.target.files.length > 0) {
+      file = e.target.files[0];
     }
+    
+    if (!file) return;
 
     setUploadedFile(file);
     
     // Analyse intelligente du nom du fichier pour charger le modèle correspondant
     const nameLower = file.name.toLowerCase();
-    let matchedTemplate: CerfaTemplate | undefined;
+    let matchedTemplate = CERFA_LIST.find(t => nameLower.includes(t.id) || nameLower.includes(t.cerfaNumber.replace('*', '')));
 
-    if (nameLower.includes('cession') || nameLower.includes('vehicule') || nameLower.includes('15776') || nameLower.includes('voiture') || nameLower.includes('vente')) {
-      matchedTemplate = CERFA_TEMPLATES.find(t => t.id === 'cession-vehicule');
-    } else if (nameLower.includes('passeport') || nameLower.includes('cni') || nameLower.includes('identité') || nameLower.includes('12100') || nameLower.includes('carte') || nameLower.includes('identite')) {
-      matchedTemplate = CERFA_TEMPLATES.find(t => t.id === 'passeport');
-    } else if (nameLower.includes('association') || nameLower.includes('asso') || nameLower.includes('creation') || nameLower.includes('13973') || nameLower.includes('loi 1901')) {
-      matchedTemplate = CERFA_TEMPLATES.find(t => t.id === 'creation-association');
+    if (!matchedTemplate) {
+      if (nameLower.includes('cession') || nameLower.includes('vehicule') || nameLower.includes('15776') || nameLower.includes('voiture')) matchedTemplate = CERFA_LIST.find(t => t.id === 'cession-vehicule');
+      if (nameLower.includes('passeport') || nameLower.includes('cni') || nameLower.includes('12100')) matchedTemplate = CERFA_LIST.find(t => t.id === 'passeport');
+      if (nameLower.includes('association') || nameLower.includes('13973')) matchedTemplate = CERFA_LIST.find(t => t.id === 'creation-association');
     }
 
     // Créer le message d'importation
-    let text = `📂 Fichier PDF importé avec succès : "${file.name}" (${(file.size / 1024).toFixed(1)} Ko). Le rendu interactif PDF.js est prêt.`;
+    let text = `📂 Fichier PDF importé avec succès : "${file.name}" (${(file.size / 1024).toFixed(1)} Ko).`;
 
-    if (matchedTemplate && matchedTemplate.id !== currentTemplate.id) {
-      text += `\n\n🎯 **Détection automatique de modèle** : Le fichier semble être un formulaire de type **"${matchedTemplate.name}" (Cerfa ${matchedTemplate.cerfaNumber})**. Les champs détectés à droite ont été mis à jour automatiquement pour ce document !`;
-      
-      // Mettre à jour le template (le useEffect mettra à jour les champs, sans effacer le fichier car nous avons retiré setUploadedFile(null))
+    if (matchedTemplate) {
+      text += `\n\n🎯 **Détection automatique** : Modèle **"${matchedTemplate.name}"** identifié. Les champs ont été chargés.`;
       setCurrentTemplate(matchedTemplate);
     } else {
-      text += `\n\nℹ️ **Modèle actuel appliqué** : Les champs détectés à droite correspondent au formulaire de **"${currentTemplate.name}"**. Vous pouvez modifier le modèle si nécessaire en cliquant sur les boutons de sélection.`;
-      // S'assurer que les champs sont vidés pour ce nouveau document
-      setFields(currentTemplate.fields.map(f => ({ ...f, value: '', isExtracted: false })));
+      text += `\n\n⚠️ **Modèle inconnu** : Impossible d'identifier le formulaire automatiquement.\n**Veuillez sélectionner manuellement le modèle** dans la liste déroulante en haut pour charger les champs correspondants.`;
+      setCurrentTemplate(null);
     }
 
     const fileMessage: Message = {
@@ -194,7 +196,7 @@ function Home() {
       // 3. Ajouter la réponse de confirmation de l'IA
       const botResponseText = newlyFilledCount > 0 
         ? `✨ Analyse terminée ! J'ai extrait vos informations sémantiques et rempli **${newlyFilledCount} nouveaux champs** du Cerfa.\n\nVous pouvez réviser chaque case en surbrillance sur le document ou directement dans la colonne de droite, puis télécharger votre export !`
-        : `Analyse terminée. Je n'ai pas détecté de nouvelles informations correspondant aux champs du Cerfa ${currentTemplate.cerfaNumber}. Réessayez en étant plus précis (ex: "Je m'appelle Jean Dupont").`;
+        : `Analyse terminée. Je n'ai pas détecté de nouvelles informations correspondant aux champs du Cerfa ${currentTemplate?.cerfaNumber || ''}. Réessayez en étant plus précis (ex: "Je m'appelle Jean Dupont").`;
 
       const botMsg: Message = {
         id: `bot-extract-res-${Date.now()}`,
@@ -260,6 +262,14 @@ function Home() {
           </div>
         </div>
 
+        {/* Sélecteur dynamique de Cerfa */}
+        <CerfaSelector 
+          currentTemplate={currentTemplate}
+          onTemplateSelect={setCurrentTemplate}
+          onFileUpload={handleFileUploaded}
+          uploadedFileName={uploadedFile?.name || null}
+        />
+
         {/* Primary 3-Column Bento Layout */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
@@ -268,10 +278,7 @@ function Home() {
             <PdfViewer
               template={currentTemplate}
               fields={fields}
-              selectedTemplateId={currentTemplate.id}
-              onTemplateChange={setCurrentTemplate}
-              templates={CERFA_TEMPLATES}
-              onFileUploaded={handleFileUploaded}
+              onFileUploaded={(file) => handleFileUploaded(file)}
               uploadedFile={uploadedFile}
               activeFieldId={activeFieldId}
               onFieldSelect={handleFieldSelect}
@@ -285,7 +292,8 @@ function Home() {
               onSendMessage={handleSendMessage}
               onAnalyzeAndFill={handleAnalyzeAndFill}
               extractionStatus={extractionStatus}
-              templateName={currentTemplate.name}
+              templateName={currentTemplate?.name || 'Aucun modèle'}
+              disabled={!currentTemplate}
             />
           </section>
 

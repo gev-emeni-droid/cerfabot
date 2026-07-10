@@ -4,11 +4,8 @@ import { CerfaTemplate, CerfaField } from '../types';
 import { inspectPdfFields } from '../services/cerfaService';
 
 interface PdfViewerProps {
-  template: CerfaTemplate;
+  template: CerfaTemplate | null;
   fields: CerfaField[];
-  selectedTemplateId: string;
-  onTemplateChange: (template: CerfaTemplate) => void;
-  templates: CerfaTemplate[];
   onFileUploaded: (file: File) => void;
   uploadedFile: File | null;
   activeFieldId: string | null;
@@ -18,9 +15,6 @@ interface PdfViewerProps {
 export default function PdfViewer({
   template,
   fields,
-  selectedTemplateId,
-  onTemplateChange,
-  templates,
   onFileUploaded,
   uploadedFile,
   activeFieldId,
@@ -156,14 +150,6 @@ export default function PdfViewer({
     }
   };
 
-  const selectSample = (tpl: CerfaTemplate) => {
-    onTemplateChange(tpl);
-    setPageNum(1);
-    setNumPages(1);
-    setScale(1.0);
-    setRotate(0);
-  };
-
   return (
     <div className="flex flex-col h-full bg-slate-50 border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
       {/* Viewer Toolbar */}
@@ -171,7 +157,7 @@ export default function PdfViewer({
         <div className="flex items-center gap-2">
           <FileText className="h-4.5 w-4.5 text-slate-500" />
           <span className="text-xs font-semibold text-slate-800 uppercase tracking-wider font-mono">
-            {uploadedFile ? uploadedFile.name : `Mode simulation - ${template.name}`}
+            {uploadedFile ? uploadedFile.name : (template ? `Mode simulation - ${template.name}` : 'Aucun document')}
           </span>
           {uploadedFile && (
             <button
@@ -256,6 +242,15 @@ export default function PdfViewer({
           </div>
         )}
 
+        {/* 0. Empty Placeholder */}
+        {!uploadedFile && !template && !dragActive && (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center animate-in fade-in duration-500">
+             <FileText className="h-16 w-16 mb-4 text-slate-200" />
+             <p className="text-lg font-medium text-slate-600">Aucun document chargé</p>
+             <p className="text-sm mt-2 max-w-sm text-slate-400">Utilisez la barre de sélection ou chargez votre propre fichier PDF.</p>
+          </div>
+        )}
+
         {/* 1. PDF.js Canvas Rendering (Real PDF mode) */}
         {uploadedFile && !pdfError && (
           <div className="relative shadow-lg rounded-md overflow-hidden bg-white border border-slate-200">
@@ -317,7 +312,7 @@ export default function PdfViewer({
         )}
 
         {/* 2. Beautiful Dynamic Document Simulation (No PDF uploaded, or error) */}
-        {(!uploadedFile || pdfError) && (
+        {(!uploadedFile || pdfError) && template && (
           <div className="w-full max-w-2xl bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
             {pdfError && (
               <div className="m-4 p-3 bg-rose-50 border border-rose-100 text-rose-800 text-xs rounded-lg flex items-start gap-2">
@@ -331,26 +326,6 @@ export default function PdfViewer({
                 </div>
               </div>
             )}
-
-            {/* Template selector tabs */}
-            <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-4 flex-wrap">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Modèle sélectionné</span>
-              <div className="flex gap-1.5">
-                {templates.map((tpl) => (
-                  <button
-                    key={tpl.id}
-                    onClick={() => selectSample(tpl)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
-                      selectedTemplateId === tpl.id
-                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    {tpl.cerfaNumber}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Interactive Grid Representation of the Cerfa page */}
             <div className="p-8 flex-1 bg-white relative font-sans">

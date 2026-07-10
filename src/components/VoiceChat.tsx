@@ -9,6 +9,7 @@ interface VoiceChatProps {
   onAnalyzeAndFill: (text: string) => void;
   extractionStatus: ExtractionStatus;
   templateName: string;
+  disabled?: boolean;
 }
 
 export default function VoiceChat({
@@ -17,6 +18,7 @@ export default function VoiceChat({
   onAnalyzeAndFill,
   extractionStatus,
   templateName,
+  disabled = false,
 }: VoiceChatProps) {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -75,6 +77,7 @@ export default function VoiceChat({
   }, [messages, extractionStatus]);
 
   const toggleListening = () => {
+    if (disabled) return;
     if (!speechSupported || !recognition) {
       alert("La reconnaissance vocale n'est pas supportée sur ce navigateur. Veuillez utiliser Google Chrome.");
       return;
@@ -255,8 +258,8 @@ export default function VoiceChat({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Tapez vos informations ou cliquez sur le micro..."
-            className="flex-1 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 focus:border-slate-700 text-xs py-3.5 pl-4 pr-12 focus:outline-hidden text-white placeholder-slate-500"
-            disabled={extractionStatus.step !== 'idle'}
+            className="flex-1 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 focus:border-slate-700 text-xs py-3.5 pl-4 pr-12 focus:outline-hidden text-white placeholder-slate-500 disabled:opacity-50"
+            disabled={disabled || extractionStatus.step !== 'idle'}
             id="chat-input"
           />
 
@@ -265,6 +268,7 @@ export default function VoiceChat({
             type="button"
             onClick={toggleListening}
             className={`absolute right-2 top-1.5 bottom-1.5 w-9 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer ${
+              disabled ? 'opacity-50 cursor-not-allowed' :
               isListening
                 ? 'bg-rose-600 text-white animate-pulse'
                 : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
@@ -281,8 +285,8 @@ export default function VoiceChat({
           <button
             type="button"
             onClick={triggerAnalysis}
-            disabled={!inputText.trim() || extractionStatus.step !== 'idle'}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-3 text-xs transition shadow-md shadow-indigo-900/10 disabled:opacity-40 cursor-pointer"
+            disabled={disabled || !inputText.trim() || extractionStatus.step !== 'idle'}
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-3 text-xs transition shadow-md shadow-indigo-900/10 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             id="fill-btn"
           >
             <Sparkles className="h-3.5 w-3.5" />
@@ -293,8 +297,8 @@ export default function VoiceChat({
           {/* Fallback simple text send button */}
           <button
             onClick={handleSend}
-            disabled={!inputText.trim() || extractionStatus.step !== 'idle'}
-            className="px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition cursor-pointer"
+            disabled={disabled || !inputText.trim() || extractionStatus.step !== 'idle'}
+            className="px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             title="Envoyer au chat"
           >
             <Send className="h-4.5 w-4.5" />

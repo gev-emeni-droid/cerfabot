@@ -4,7 +4,7 @@ import { User, MapPin, Car, HelpCircle, Download, RotateCcw, Check, Sparkles } f
 import { exportCerfaToTxt } from '../services/cerfaService';
 
 interface FieldListProps {
-  template: CerfaTemplate;
+  template: CerfaTemplate | null;
   fields: CerfaField[];
   onFieldChange: (fieldId: string, value: string) => void;
   onClearField: (fieldId: string) => void;
@@ -22,6 +22,17 @@ export default function FieldList({
   activeFieldId,
   onFieldSelect,
 }: FieldListProps) {
+  if (!template) {
+    return (
+      <div className="flex flex-col h-full bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm p-8 items-center justify-center text-center">
+        <Sparkles className="h-10 w-10 text-slate-300 mb-3" />
+        <p className="text-slate-500 font-medium text-sm leading-relaxed max-w-xs">
+          Veuillez sélectionner un modèle de formulaire pour démarrer l'analyse.
+        </p>
+      </div>
+    );
+  }
+
   // Grouper les champs par catégorie
   const groupedFields: Record<string, CerfaField[]> = {
     identity: fields.filter(f => f.category === 'identity'),

@@ -42,67 +42,77 @@
 import { CerfaTemplate, CerfaField } from '../types';
 import { PDFDocument } from 'pdf-lib';
 
-// Modèles de démonstration pré-configurés pour tester l'application immédiatement
-export const CERFA_TEMPLATES: CerfaTemplate[] = [
-  {
+// Définitions des champs séparées (Découplage)
+export const cerfa15776_fields: CerfaField[] = [
+  { id: 'vehicule_immat', label: 'Numéro d\'immatriculation', type: 'text', category: 'vehicle', value: '', x: 18, y: 35, width: 25, page: 1 },
+  { id: 'vehicule_vin', label: 'Numéro d\'identification (VIN)', type: 'text', category: 'vehicle', value: '', x: 50, y: 35, width: 35, page: 1 },
+  { id: 'vehicule_marque', label: 'Marque', type: 'text', category: 'vehicle', value: '', x: 18, y: 41, width: 25, page: 1 },
+  { id: 'vehicule_modele', label: 'Modèle commercial', type: 'text', category: 'vehicle', value: '', x: 50, y: 41, width: 35, page: 1 },
+  { id: 'vehicule_puissance', label: 'Puissance fiscale (ch)', type: 'number', category: 'vehicle', value: '', x: 18, y: 47, width: 12, page: 1 },
+  { id: 'vendeur_nom', label: 'Nom du vendeur', type: 'text', category: 'identity', value: '', x: 18, y: 58, width: 30, page: 1 },
+  { id: 'vendeur_prenom', label: 'Prénom du vendeur', type: 'text', category: 'identity', value: '', x: 55, y: 58, width: 30, page: 1 },
+  { id: 'vendeur_adresse', label: 'Adresse du vendeur', type: 'text', category: 'address', value: '', x: 18, y: 64, width: 67, page: 1 },
+  { id: 'acquereur_nom', label: 'Nom de l\'acquéreur', type: 'text', category: 'identity', value: '', x: 18, y: 75, width: 30, page: 1 },
+  { id: 'acquereur_prenom', label: 'Prénom de l\'acquéreur', type: 'text', category: 'identity', value: '', x: 55, y: 75, width: 30, page: 1 },
+  { id: 'acquereur_adresse', label: 'Adresse de l\'acquéreur', type: 'text', category: 'address', value: '', x: 18, y: 81, width: 67, page: 1 },
+  { id: 'date_cession', label: 'Date de la cession', type: 'date', category: 'other', value: '', x: 18, y: 90, width: 20, page: 1 },
+];
+
+export const cerfa12100_fields: CerfaField[] = [
+  { id: 'demandeur_nom', label: 'Nom de naissance', type: 'text', category: 'identity', value: '', x: 25, y: 28, width: 55, page: 1 },
+  { id: 'demandeur_prenoms', label: 'Prénoms (séparés par des virgules)', type: 'text', category: 'identity', value: '', x: 25, y: 34, width: 55, page: 1 },
+  { id: 'demandeur_date_naissance', label: 'Date de naissance', type: 'date', category: 'identity', value: '', x: 25, y: 40, width: 20, page: 1 },
+  { id: 'demandeur_ville_naissance', label: 'Ville de naissance', type: 'text', category: 'identity', value: '', x: 55, y: 40, width: 25, page: 1 },
+  { id: 'demandeur_taille', label: 'Taille (en cm)', type: 'number', category: 'identity', value: '', x: 25, y: 46, width: 10, page: 1 },
+  { id: 'demandeur_sexe', label: 'Sexe (M/F)', type: 'text', category: 'identity', value: '', x: 45, y: 46, width: 10, page: 1 },
+  { id: 'demandeur_pere_nom', label: 'Nom du père', type: 'text', category: 'identity', value: '', x: 25, y: 56, width: 55, page: 1 },
+  { id: 'demandeur_mere_nom', label: 'Nom de naissance de la mère', type: 'text', category: 'identity', value: '', x: 25, y: 62, width: 55, page: 1 },
+  { id: 'demandeur_adresse', label: 'Adresse complète', type: 'text', category: 'address', value: '', x: 25, y: 72, width: 55, page: 1 },
+  { id: 'demandeur_telephone', label: 'Numéro de téléphone mobile', type: 'text', category: 'identity', value: '', x: 25, y: 78, width: 25, page: 1 },
+  { id: 'demandeur_email', label: 'Adresse e-mail', type: 'text', category: 'identity', value: '', x: 55, y: 78, width: 25, page: 1 },
+];
+
+export const cerfa13973_fields: CerfaField[] = [
+  { id: 'asso_titre', label: 'Titre de l\'association', type: 'text', category: 'vehicle', value: '', x: 20, y: 30, width: 60, page: 1 },
+  { id: 'asso_sigle', label: 'Sigle de l\'association', type: 'text', category: 'vehicle', value: '', x: 20, y: 36, width: 20, page: 1 },
+  { id: 'asso_objet', label: 'Objet de l\'association (Buts)', type: 'text', category: 'other', value: '', x: 20, y: 44, width: 60, page: 1 },
+  { id: 'asso_adresse_siege', label: 'Adresse du siège social', type: 'text', category: 'address', value: '', x: 20, y: 58, width: 60, page: 1 },
+  { id: 'asso_telephone', label: 'Téléphone de contact', type: 'text', category: 'other', value: '', x: 20, y: 64, width: 25, page: 1 },
+  { id: 'asso_email', label: 'Adresse e-mail de l\'association', type: 'text', category: 'other', value: '', x: 55, y: 64, width: 25, page: 1 },
+  { id: 'asso_representant_nom', label: 'Nom du représentant', type: 'text', category: 'identity', value: '', x: 20, y: 76, width: 30, page: 1 },
+  { id: 'asso_representant_prenom', label: 'Prénom du représentant', type: 'text', category: 'identity', value: '', x: 55, y: 76, width: 25, page: 1 },
+];
+
+// Registre central des modèles (JSON/Map)
+export const CERFA_REGISTRY: Record<string, CerfaTemplate> = {
+  'cession-vehicule': {
     id: 'cession-vehicule',
     name: 'Déclaration de Cession de Véhicule',
     cerfaNumber: '15776*02',
     description: 'Document officiel pour la vente ou le don d\'un véhicule d\'occasion en France.',
     category: 'Automobile',
-    fields: [
-      { id: 'vehicule_immat', label: 'Numéro d\'immatriculation', type: 'text', category: 'vehicle', value: '', x: 18, y: 35, width: 25, page: 1 },
-      { id: 'vehicule_vin', label: 'Numéro d\'identification (VIN)', type: 'text', category: 'vehicle', value: '', x: 50, y: 35, width: 35, page: 1 },
-      { id: 'vehicule_marque', label: 'Marque', type: 'text', category: 'vehicle', value: '', x: 18, y: 41, width: 25, page: 1 },
-      { id: 'vehicule_modele', label: 'Modèle commercial', type: 'text', category: 'vehicle', value: '', x: 50, y: 41, width: 35, page: 1 },
-      { id: 'vehicule_puissance', label: 'Puissance fiscale (ch)', type: 'number', category: 'vehicle', value: '', x: 18, y: 47, width: 12, page: 1 },
-      { id: 'vendeur_nom', label: 'Nom du vendeur', type: 'text', category: 'identity', value: '', x: 18, y: 58, width: 30, page: 1 },
-      { id: 'vendeur_prenom', label: 'Prénom du vendeur', type: 'text', category: 'identity', value: '', x: 55, y: 58, width: 30, page: 1 },
-      { id: 'vendeur_adresse', label: 'Adresse du vendeur', type: 'text', category: 'address', value: '', x: 18, y: 64, width: 67, page: 1 },
-      { id: 'acquereur_nom', label: 'Nom de l\'acquéreur', type: 'text', category: 'identity', value: '', x: 18, y: 75, width: 30, page: 1 },
-      { id: 'acquereur_prenom', label: 'Prénom de l\'acquéreur', type: 'text', category: 'identity', value: '', x: 55, y: 75, width: 30, page: 1 },
-      { id: 'acquereur_adresse', label: 'Adresse de l\'acquéreur', type: 'text', category: 'address', value: '', x: 18, y: 81, width: 67, page: 1 },
-      { id: 'date_cession', label: 'Date de la cession', type: 'date', category: 'other', value: '', x: 18, y: 90, width: 20, page: 1 },
-    ]
+    fields: cerfa15776_fields
   },
-  {
+  'passeport': {
     id: 'passeport',
     name: 'Demande de Passeport / CNI',
     cerfaNumber: '12100*02',
     description: 'Formulaire de demande de passeport biométrique et de carte nationale d\'identité.',
     category: 'Identité',
-    fields: [
-      { id: 'demandeur_nom', label: 'Nom de naissance', type: 'text', category: 'identity', value: '', x: 25, y: 28, width: 55, page: 1 },
-      { id: 'demandeur_prenoms', label: 'Prénoms (séparés par des virgules)', type: 'text', category: 'identity', value: '', x: 25, y: 34, width: 55, page: 1 },
-      { id: 'demandeur_date_naissance', label: 'Date de naissance', type: 'date', category: 'identity', value: '', x: 25, y: 40, width: 20, page: 1 },
-      { id: 'demandeur_ville_naissance', label: 'Ville de naissance', type: 'text', category: 'identity', value: '', x: 55, y: 40, width: 25, page: 1 },
-      { id: 'demandeur_taille', label: 'Taille (en cm)', type: 'number', category: 'identity', value: '', x: 25, y: 46, width: 10, page: 1 },
-      { id: 'demandeur_sexe', label: 'Sexe (M/F)', type: 'text', category: 'identity', value: '', x: 45, y: 46, width: 10, page: 1 },
-      { id: 'demandeur_pere_nom', label: 'Nom du père', type: 'text', category: 'identity', value: '', x: 25, y: 56, width: 55, page: 1 },
-      { id: 'demandeur_mere_nom', label: 'Nom de naissance de la mère', type: 'text', category: 'identity', value: '', x: 25, y: 62, width: 55, page: 1 },
-      { id: 'demandeur_adresse', label: 'Adresse complète', type: 'text', category: 'address', value: '', x: 25, y: 72, width: 55, page: 1 },
-      { id: 'demandeur_telephone', label: 'Numéro de téléphone mobile', type: 'text', category: 'identity', value: '', x: 25, y: 78, width: 25, page: 1 },
-      { id: 'demandeur_email', label: 'Adresse e-mail', type: 'text', category: 'identity', value: '', x: 55, y: 78, width: 25, page: 1 },
-    ]
+    fields: cerfa12100_fields
   },
-  {
+  'creation-association': {
     id: 'creation-association',
     name: 'Création d\'une Association',
     cerfaNumber: '13973*03',
     description: 'Déclaration préalable de création d\'une association loi 1901 auprès de la préfecture.',
     category: 'Professionnel',
-    fields: [
-      { id: 'asso_titre', label: 'Titre de l\'association', type: 'text', category: 'vehicle', value: '', x: 20, y: 30, width: 60, page: 1 },
-      { id: 'asso_sigle', label: 'Sigle de l\'association', type: 'text', category: 'vehicle', value: '', x: 20, y: 36, width: 20, page: 1 },
-      { id: 'asso_objet', label: 'Objet de l\'association (Buts)', type: 'text', category: 'other', value: '', x: 20, y: 44, width: 60, page: 1 },
-      { id: 'asso_adresse_siege', label: 'Adresse du siège social', type: 'text', category: 'address', value: '', x: 20, y: 58, width: 60, page: 1 },
-      { id: 'asso_telephone', label: 'Téléphone de contact', type: 'text', category: 'other', value: '', x: 20, y: 64, width: 25, page: 1 },
-      { id: 'asso_email', label: 'Adresse e-mail de l\'association', type: 'text', category: 'other', value: '', x: 55, y: 64, width: 25, page: 1 },
-      { id: 'asso_representant_nom', label: 'Nom du représentant', type: 'text', category: 'identity', value: '', x: 20, y: 76, width: 30, page: 1 },
-      { id: 'asso_representant_prenom', label: 'Prénom du représentant', type: 'text', category: 'identity', value: '', x: 55, y: 76, width: 25, page: 1 },
-    ]
+    fields: cerfa13973_fields
   }
-];
+};
+
+// Liste itérable pour les sélecteurs
+export const CERFA_LIST = Object.values(CERFA_REGISTRY);
 
 /**
  * SIMULATION DE L'IA (LLM EXPORT PATTERN)
