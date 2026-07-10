@@ -23,6 +23,7 @@ export interface CerfaTemplate {
   category: string;
   fields: CerfaField[];
   previewUrl?: string;
+  isCertified?: boolean;
 }
 
 export interface Message {

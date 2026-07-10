@@ -4,21 +4,21 @@ import Header from './components/Header';
 import PdfViewer from './components/PdfViewer';
 import FieldList from './components/FieldList';
 import VoiceChat from './components/VoiceChat';
-import { CERFA_LIST, inspectPdfFields, simulateAIExtraction } from './services/cerfaService';
+import { fetchCerfaCatalogue, simulateAIExtraction } from './services/cerfaService';
 import { CerfaTemplate, CerfaField, Message, ExtractionStatus } from './types';
-import { Sparkles, Bot, AlertCircle, FileText, CheckCircle } from 'lucide-react';
+import { Sparkles, Bot, AlertCircle, FileText, CheckCircle, Loader2 } from 'lucide-react';
 import Legal from './components/Legal';
 import CerfaSelector from './components/CerfaSelector';
 
 function Home() {
+  const [cerfaList, setCerfaList] = useState<CerfaTemplate[]>([]);
+  const [isLoadingCatalogue, setIsLoadingCatalogue] = useState(true);
+
   // Sélection du modèle de Cerfa (par défaut Vierge)
   const [currentTemplate, setCurrentTemplate] = useState<CerfaTemplate | null>(null);
   
   // Liste des champs en cours (clonés depuis le modèle courant)
   const [fields, setFields] = useState<CerfaField[]>([]);
-  
-  // Fichier PDF chargé par l'utilisateur
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   
   // Champ actuellement sélectionné dans l'interface pour coordination visuelle
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
@@ -34,6 +34,16 @@ function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   // Synchroniser les champs lors du changement de modèle Cerfa
+  useEffect(() => {
+    async function loadCatalogue() {
+      setIsLoadingCatalogue(true);
+      const list = await fetchCerfaCatalogue();
+      setCerfaList(list);
+      setIsLoadingCatalogue(false);
+    }
+    loadCatalogue();
+  }, []);
+
   useEffect(() => {
     if (!currentTemplate) {
       setFields([]);
@@ -61,48 +71,7 @@ function Home() {
     setActiveFieldId(null);
   }, [currentTemplate]);
 
-  // Gérer l'upload d'un nouveau fichier PDF
-  const handleFileUploaded = async (e: React.ChangeEvent<HTMLInputElement> | File) => {
-    let file: File | null = null;
-    if (e instanceof File) {
-      file = e;
-    } else if (e.target && e.target.files && e.target.files.length > 0) {
-      file = e.target.files[0];
-    }
-    
-    if (!file) return;
 
-    setUploadedFile(file);
-    
-    // Analyse intelligente du nom du fichier pour charger le modèle correspondant
-    const nameLower = file.name.toLowerCase();
-    let matchedTemplate = CERFA_LIST.find(t => nameLower.includes(t.id) || nameLower.includes(t.cerfaNumber.replace('*', '')));
-
-    if (!matchedTemplate) {
-      if (nameLower.includes('cession') || nameLower.includes('vehicule') || nameLower.includes('15776') || nameLower.includes('voiture')) matchedTemplate = CERFA_LIST.find(t => t.id === 'cession-vehicule');
-      if (nameLower.includes('passeport') || nameLower.includes('cni') || nameLower.includes('12100')) matchedTemplate = CERFA_LIST.find(t => t.id === 'passeport');
-      if (nameLower.includes('association') || nameLower.includes('13973')) matchedTemplate = CERFA_LIST.find(t => t.id === 'creation-association');
-    }
-
-    // Créer le message d'importation
-    let text = `📂 Fichier PDF importé avec succès : "${file.name}" (${(file.size / 1024).toFixed(1)} Ko).`;
-
-    if (matchedTemplate) {
-      text += `\n\n🎯 **Détection automatique** : Modèle **"${matchedTemplate.name}"** identifié. Les champs ont été chargés.`;
-      setCurrentTemplate(matchedTemplate);
-    } else {
-      text += `\n\n⚠️ **Modèle inconnu** : Impossible d'identifier le formulaire automatiquement.\n**Veuillez sélectionner manuellement le modèle** dans la liste déroulante en haut pour charger les champs correspondants.`;
-      setCurrentTemplate(null);
-    }
-
-    const fileMessage: Message = {
-      id: `file-${Date.now()}`,
-      sender: 'system',
-      text: text,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, fileMessage]);
-  };
 
   // Modification manuelle d'un champ par l'utilisateur
   const handleFieldChange = (fieldId: string, value: string) => {
@@ -262,24 +231,28 @@ function Home() {
           </div>
         </div>
 
-        {/* Sélecteur dynamique de Cerfa */}
-        <CerfaSelector 
-          currentTemplate={currentTemplate}
-          onTemplateSelect={setCurrentTemplate}
-          onFileUpload={handleFileUploaded}
-          uploadedFileName={uploadedFile?.name || null}
-        />
+        {isLoadingCatalogue ? (
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[500px] bg-white rounded-2xl shadow-sm border border-slate-200">
+            <Loader2 className="h-10 w-10 text-indigo-500 animate-spin mb-4" />
+            <p className="text-slate-600 font-medium">Chargement du catalogue officiel...</p>
+          </div>
+        ) : (
+          <>
+            {/* Sélecteur dynamique de Cerfa */}
+            <CerfaSelector 
+              cerfaList={cerfaList}
+              currentTemplate={currentTemplate}
+              onTemplateSelect={setCurrentTemplate}
+            />
 
-        {/* Primary 3-Column Bento Layout */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* Primary 3-Column Bento Layout */}
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
           {/* Column A: PDF Preview / Template Visualization (5/12 width on LG) */}
           <section className="lg:col-span-5 flex flex-col h-full min-h-[500px]" id="pdf-section">
             <PdfViewer
               template={currentTemplate}
               fields={fields}
-              onFileUploaded={(file) => handleFileUploaded(file)}
-              uploadedFile={uploadedFile}
               activeFieldId={activeFieldId}
               onFieldSelect={handleFieldSelect}
             />
@@ -310,7 +283,9 @@ function Home() {
             />
           </section>
 
-        </div>
+            </div>
+          </>
+        )}
       </main>
 
       {/* Footer Conforme */}

@@ -1,0 +1,135 @@
+[
+  {
+    "id": "cession-vehicule",
+    "name": "Déclaration de Cession de Véhicule",
+    "cerfaNumber": "15776*02",
+    "description": "Document officiel pour la vente ou le don d'un véhicule d'occasion en France.",
+    "category": "Automobile",
+    "isCertified": true,
+    "fields": [
+      { "id": "vehicule_immat", "label": "Numéro d'immatriculation", "type": "text", "category": "vehicle", "value": "", "x": 18, "y": 35, "width": 25, "page": 1 },
+      { "id": "vehicule_vin", "label": "Numéro d'identification (VIN)", "type": "text", "category": "vehicle", "value": "", "x": 50, "y": 35, "width": 35, "page": 1 },
+      { "id": "vehicule_marque", "label": "Marque", "type": "text", "category": "vehicle", "value": "", "x": 18, "y": 41, "width": 25, "page": 1 },
+      { "id": "vehicule_modele", "label": "Modèle commercial", "type": "text", "category": "vehicle", "value": "", "x": 50, "y": 41, "width": 35, "page": 1 },
+      { "id": "vehicule_puissance", "label": "Puissance fiscale (ch)", "type": "number", "category": "vehicle", "value": "", "x": 18, "y": 47, "width": 12, "page": 1 },
+      { "id": "vendeur_nom", "label": "Nom du vendeur", "type": "text", "category": "identity", "value": "", "x": 18, "y": 58, "width": 30, "page": 1 },
+      { "id": "vendeur_prenom", "label": "Prénom du vendeur", "type": "text", "category": "identity", "value": "", "x": 55, "y": 58, "width": 30, "page": 1 },
+      { "id": "vendeur_adresse", "label": "Adresse du vendeur", "type": "text", "category": "address", "value": "", "x": 18, "y": 64, "width": 67, "page": 1 },
+      { "id": "acquereur_nom", "label": "Nom de l'acquéreur", "type": "text", "category": "identity", "value": "", "x": 18, "y": 75, "width": 30, "page": 1 },
+      { "id": "acquereur_prenom", "label": "Prénom de l'acquéreur", "type": "text", "category": "identity", "value": "", "x": 55, "y": 75, "width": 30, "page": 1 },
+      { "id": "acquereur_adresse", "label": "Adresse de l'acquéreur", "type": "text", "category": "address", "value": "", "x": 18, "y": 81, "width": 67, "page": 1 },
+      { "id": "date_cession", "label": "Date de la cession", "type": "date", "category": "other", "value": "", "x": 18, "y": 90, "width": 20, "page": 1 }
+    ]
+  },
+  {
+    "id": "aide-juridictionnelle",
+    "name": "Aide juridictionnelle",
+    "cerfaNumber": "16146*03",
+    "description": "Demande d'aide juridictionnelle pour la prise en charge des frais de justice.",
+    "category": "Justice",
+    "isCertified": true,
+    "fields": []
+  },
+  {
+    "id": "changement-coordonnees",
+    "name": "Déclaration de changement de coordonnées",
+    "cerfaNumber": "14949*01",
+    "description": "Pour déclarer un changement d'adresse ou de coordonnées à l'administration.",
+    "category": "Administratif",
+    "isCertified": true,
+    "fields": []
+  },
+  {
+    "id": "certificat-immatriculation",
+    "name": "Demande de certificat d'immatriculation",
+    "cerfaNumber": "13750*07",
+    "description": "Pour demander une nouvelle carte grise.",
+    "category": "Automobile",
+    "isCertified": true,
+    "fields": []
+  },
+  {
+    "id": "perte-carte-grise",
+    "name": "Déclaration de perte de carte grise",
+    "cerfaNumber": "13753*04",
+    "description": "Déclaration de perte ou de vol du certificat d'immatriculation.",
+    "category": "Automobile",
+    "isCertified": true,
+    "fields": []
+  },
+  {
+    "id": "logement-social",
+    "name": "Demande de logement social",
+    "cerfaNumber": "14069*05",
+    "description": "Formulaire officiel pour la demande de logement à loyer modéré (HLM).",
+    "category": "Logement",
+    "isCertified": true,
+    "fields": []
+  },
+  {
+    "id": "passeport-majeur",
+    "name": "Demande de passeport (majeur)",
+    "cerfaNumber": "12100*02",
+    "description": "Formulaire de demande de passeport biométrique pour un adulte.",
+    "category": "Identité",
+    "isCertified": true,
+    "fields": [
+      { "id": "demandeur_nom", "label": "Nom de naissance", "type": "text", "category": "identity", "value": "", "x": 25, "y": 28, "width": 55, "page": 1 },
+      { "id": "demandeur_prenoms", "label": "Prénoms", "type": "text", "category": "identity", "value": "", "x": 25, "y": 34, "width": 55, "page": 1 },
+      { "id": "demandeur_date_naissance", "label": "Date de naissance", "type": "date", "category": "identity", "value": "", "x": 25, "y": 40, "width": 20, "page": 1 },
+      { "id": "demandeur_ville_naissance", "label": "Ville de naissance", "type": "text", "category": "identity", "value": "", "x": 55, "y": 40, "width": 25, "page": 1 },
+      { "id": "demandeur_taille", "label": "Taille (en cm)", "type": "number", "category": "identity", "value": "", "x": 25, "y": 46, "width": 10, "page": 1 },
+      { "id": "demandeur_sexe", "label": "Sexe (M/F)", "type": "text", "category": "identity", "value": "", "x": 45, "y": 46, "width": 10, "page": 1 },
+      { "id": "demandeur_pere_nom", "label": "Nom du père", "type": "text", "category": "identity", "value": "", "x": 25, "y": 56, "width": 55, "page": 1 },
+      { "id": "demandeur_mere_nom", "label": "Nom de naissance de la mère", "type": "text", "category": "identity", "value": "", "x": 25, "y": 62, "width": 55, "page": 1 },
+      { "id": "demandeur_adresse", "label": "Adresse complète", "type": "text", "category": "address", "value": "", "x": 25, "y": 72, "width": 55, "page": 1 },
+      { "id": "demandeur_telephone", "label": "Téléphone mobile", "type": "text", "category": "identity", "value": "", "x": 25, "y": 78, "width": 25, "page": 1 },
+      { "id": "demandeur_email", "label": "Adresse e-mail", "type": "text", "category": "identity", "value": "", "x": 55, "y": 78, "width": 25, "page": 1 }
+    ]
+  },
+  {
+    "id": "cni",
+    "name": "Demande de carte nationale d'identité",
+    "cerfaNumber": "12101*02",
+    "description": "Demande de carte d'identité (CNI) pour un majeur.",
+    "category": "Identité",
+    "isCertified": true,
+    "fields": []
+  },
+  {
+    "id": "declaration-revenus",
+    "name": "Déclaration de revenus (modèle général)",
+    "cerfaNumber": "2042",
+    "description": "Déclaration annuelle des revenus pour les impôts.",
+    "category": "Impôts",
+    "isCertified": true,
+    "fields": []
+  },
+  {
+    "id": "demande-rsa",
+    "name": "Demande de RSA",
+    "cerfaNumber": "15481*01",
+    "description": "Formulaire de demande de Revenu de Solidarité Active.",
+    "category": "Social",
+    "isCertified": true,
+    "fields": []
+  },
+  {
+    "id": "prestation-handicap",
+    "name": "Demande de prestation de compensation du handicap (PCH)",
+    "cerfaNumber": "13788*01",
+    "description": "Demande de PCH auprès de la MDPH.",
+    "category": "Social",
+    "isCertified": true,
+    "fields": []
+  },
+  {
+    "id": "attestation-accueil",
+    "name": "Attestation d'accueil",
+    "cerfaNumber": "10798*04",
+    "description": "Demande d'attestation d'accueil pour un étranger en France.",
+    "category": "Identité",
+    "isCertified": true,
+    "fields": []
+  }
+]
