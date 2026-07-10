@@ -29,7 +29,22 @@
     "category": "Justice",
     "isCertified": true,
     "pdfUrl": "/pdfs/cerfa_16146-03.pdf",
-    "fields": []
+    "fields": [
+      { "id": "civilite", "label": "Civilité (Monsieur/Madame)", "type": "text", "category": "identity", "value": "", "x": 20, "y": 30, "width": 20, "page": 1 },
+      { "id": "nom_naissance", "label": "Nom de naissance", "type": "text", "category": "identity", "value": "", "x": 20, "y": 35, "width": 40, "page": 1 },
+      { "id": "nom_usage", "label": "Nom d'usage", "type": "text", "category": "identity", "value": "", "x": 20, "y": 40, "width": 40, "page": 1 },
+      { "id": "prenoms", "label": "Prénoms", "type": "text", "category": "identity", "value": "", "x": 20, "y": 45, "width": 40, "page": 1 },
+      { "id": "date_naissance", "label": "Date de naissance", "type": "text", "category": "identity", "value": "", "x": 20, "y": 50, "width": 20, "page": 1 },
+      { "id": "lieu_naissance", "label": "Lieu de naissance", "type": "text", "category": "identity", "value": "", "x": 50, "y": 50, "width": 30, "page": 1 },
+      { "id": "nationalite", "label": "Nationalité", "type": "text", "category": "identity", "value": "", "x": 20, "y": 55, "width": 30, "page": 1 },
+      { "id": "adresse", "label": "Adresse", "type": "text", "category": "address", "value": "", "x": 20, "y": 60, "width": 60, "page": 1 },
+      { "id": "code_postal", "label": "Code postal", "type": "text", "category": "address", "value": "", "x": 20, "y": 65, "width": 15, "page": 1 },
+      { "id": "commune", "label": "Commune", "type": "text", "category": "address", "value": "", "x": 40, "y": 65, "width": 30, "page": 1 },
+      { "id": "pays", "label": "Pays", "type": "text", "category": "address", "value": "", "x": 75, "y": 65, "width": 20, "page": 1 },
+      { "id": "telephone", "label": "Numéro de téléphone", "type": "text", "category": "contact", "value": "", "x": 20, "y": 70, "width": 30, "page": 1 },
+      { "id": "courriel", "label": "Courriel", "type": "text", "category": "contact", "value": "", "x": 55, "y": 70, "width": 40, "page": 1 },
+      { "id": "numero_fiscal", "label": "Numéro fiscal", "type": "text", "category": "identity", "value": "", "x": 20, "y": 75, "width": 30, "page": 1 }
+    ]
   },
   {
     "id": "changement-coordonnees",
